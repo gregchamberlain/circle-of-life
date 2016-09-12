@@ -37,12 +37,15 @@ The structure of the project will include the following.
 Also begin working with Easel.js to understand how it works.
 
 **Day 2**: Build out `circle.js`, `board.js`, and `game.js` enough to get circles rendering on the screen  and the ability to update the movement of each circle (player and enemies). Also build out user input handling.
+
 **Day 3**: Game Logic. This includes:
 - Detecting collisions
 - Handling circle logic after collision
 - GameOver state
 Also begin work on start/end screens
+
 **Day 4**: Add difficulty level, and add finishing touches including styles and github/linkin links.
+
 **Bonus**
 - [ ] Players can change the color of their circle
 - [ ] Player can select colors for enemy circles
