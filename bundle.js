@@ -170,8 +170,8 @@
 	  }, {
 	    key: 'addCircles',
 	    value: function addCircles() {
-	      for (var i = 0; i < 25; i++) {
-	        var r = Math.floor(Math.random() * i * 4) + 3;
+	      for (var i = 0; i < 65; i++) {
+	        var r = Math.floor(Math.random() * 5) + 5;
 	        var x = Math.floor(Math.random() * (this.width - 2 * r)) + r;
 	        var y = Math.floor(Math.random() * (this.height - 2 * r)) + r;
 	        var circle = new _circle2.default(x, y, r);
@@ -210,13 +210,21 @@
 	    this.x = x;
 	    this.y = y;
 	    this.r = r;
-	    this.momentum = (0, _utils.randomVec)(10);
+	    this.growAmount = 0;
+	    this.shrinking = false;
+	    this.momentum = (0, _utils.randomVec)(5);
 	    this.color = 'rgba(0, 0, 0, 0.7)';
 	  }
 	
 	  _createClass(Circle, [{
 	    key: 'update',
 	    value: function update(dt) {
+	      if (this.shrinking) {
+	        this.r -= 1;
+	      } else if (this.growAmount) {
+	        this.r += 1;
+	        this.growAmount -= 1;
+	      }
 	
 	      var nextX = this.x + this.momentum[0] * dt / this.r;
 	      var nextY = this.y + this.momentum[1] * dt / this.r;
@@ -237,6 +245,16 @@
 	      ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
 	      ctx.fill();
 	    }
+	  }, {
+	    key: 'grow',
+	    value: function grow(num) {
+	      this.growAmount += Math.round(num / 2);
+	    }
+	  }, {
+	    key: 'shrink',
+	    value: function shrink() {
+	      this.shrinking = true;
+	    }
 	  }]);
 	
 	  return Circle;
@@ -254,9 +272,18 @@
 	  value: true
 	});
 	var randomVec = exports.randomVec = function randomVec(length) {
-	  var x = Math.random() * length;
-	  var y = Math.sqrt(length * length - x * x);
+	  var x = Math.random() * length * randNeg();
+	  var y = Math.sqrt(length * length - x * x) * randNeg();
 	  return [x, y];
+	};
+	
+	var randNeg = function randNeg() {
+	  var rand = Math.random();
+	  if (Math.random() > 0.5) {
+	    return 1;
+	  } else {
+	    return -1;
+	  }
 	};
 	
 	var DIMS = exports.DIMS = [window.innerWidth, window.innerHeight];
@@ -266,9 +293,16 @@
 	  var yDiff = c1.y - c2.y;
 	  var dist = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 	  if (dist <= c1.r + c2.r) {
-	    var scale = (c1.r + c2.r) / dist;
-	    c1.x = c2.x + xDiff * scale;
-	    c1.y = c2.y + yDiff * scale;
+	    if (c1.r + c1.growAmount >= c2.r + c2.growAmount && !c2.shrinking) {
+	      c2.shrink();
+	      c1.grow(c2.r);
+	    } else if (c2.r + c2.growAmount > c1.r + c1.growAmount && !c1.shrinking) {
+	      c1.shrink();
+	      c2.grow(c1.r);
+	    }
+	    // const scale = (c1.r + c2.r) / dist;
+	    // c1.x = c2.x + xDiff * scale;
+	    // c1.y = c2.y + yDiff * scale;
 	    // handleCollision(c1, c2);
 	    // c1.momentum[0] *= -1;
 	    // c1.momentum[1] *= -1;
