@@ -148,19 +148,27 @@
 	    this.width = width;
 	    this.height = height;
 	    this.pressed = { x: 0, y: 0 };
-	    this.bindKeyHandlers();
 	    this.circles = [new _player2.default()];
 	    this.addCircles();
+	    this.started = false;
 	  }
 	
 	  _createClass(Game, [{
+	    key: 'start',
+	    value: function start() {
+	      this.bindKeyHandlers();
+	      this.start = true;
+	    }
+	  }, {
 	    key: 'update',
 	    value: function update(dt) {
 	      var _this = this;
 	
-	      for (var i = 0; i < this.circles.length; i++) {
-	        for (var j = i + 1; j < this.circles.length; j++) {
-	          (0, _utils.checkCollision)(this.circles[i], this.circles[j]);
+	      if (this.started) {
+	        for (var i = 0; i < this.circles.length; i++) {
+	          for (var j = i + 1; j < this.circles.length; j++) {
+	            (0, _utils.checkCollision)(this.circles[i], this.circles[j]);
+	          }
 	        }
 	      }
 	      this.circles.forEach(function (circle) {
