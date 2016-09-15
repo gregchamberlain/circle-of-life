@@ -149,31 +149,58 @@
 	    this.height = height;
 	    this.pressed = { x: 0, y: 0 };
 	    this.circles = [new _player2.default()];
+	    this.status = 'starting';
 	    this.addCircles();
 	    this.started = false;
+	    this.paused = false;
+	    this.bindKeyHandlers();
+	    this.destroyed = 0;
 	  }
 	
 	  _createClass(Game, [{
 	    key: 'start',
 	    value: function start() {
-	      this.bindKeyHandlers();
 	      this.start = true;
+	    }
+	  }, {
+	    key: 'reset',
+	    value: function reset() {
+	      this.circles = [new _player2.default()];
+	      this.addCircles();
+	      this.started = false;
+	      this.paused = false;
+	      this.destroyed = 0;
 	    }
 	  }, {
 	    key: 'update',
 	    value: function update(dt) {
 	      var _this = this;
 	
+	      if (this.paused) return;
 	      if (this.started) {
 	        for (var i = 0; i < this.circles.length; i++) {
 	          for (var j = i + 1; j < this.circles.length; j++) {
-	            (0, _utils.checkCollision)(this.circles[i], this.circles[j]);
+	            (0, _utils.checkCollision)(this.circles[i], this.circles[j], this.destroyCircle.bind(this));
 	          }
 	        }
 	      }
 	      this.circles.forEach(function (circle) {
-	        circle.update(dt, _this.pressed);
+	        circle.update(dt, _this.pressed, _this.started);
 	      });
+	    }
+	  }, {
+	    key: 'destroyCircle',
+	    value: function destroyCircle(player) {
+	      if (player) {
+	        this.status = 'lost';
+	        this.reset();
+	      } else {
+	        this.destroyed += 1;
+	      }
+	      if (this.destroyed === this.circles.length - 1) {
+	        this.status = 'won';
+	        this.reset();
+	      }
 	    }
 	  }, {
 	    key: 'render',
@@ -182,17 +209,58 @@
 	      this.circles.forEach(function (circle) {
 	        circle.render(ctx);
 	      });
+	      if (this.paused) {
+	        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+	        ctx.fillRect(0, 0, _utils.DIMS[0], _utils.DIMS[1]);
+	        ctx.fillStyle = 'white';
+	        ctx.textAlign = 'center';
+	        ctx.font = '30px Arial';
+	        ctx.fillText('PAUSED', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2, 400);
+	        ctx.font = '18px Arial';
+	        ctx.fillText('Press Space to Resume', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 + 24, 400);
+	      }
+	      if (!this.started) {
+	        ctx.fillStyle = 'black';
+	        ctx.beginPath();
+	        ctx.arc(_utils.DIMS[0] / 2, _utils.DIMS[1] / 2, 150, 0, 2 * Math.PI);
+	        ctx.fill();
+	        ctx.fillStyle = 'white';
+	        ctx.textAlign = 'center';
+	        ctx.font = '30px Arial';
+	        if (this.status === 'won') {
+	          ctx.fillText('YOU WIN!', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 - 90, 400);
+	        } else if (this.status === 'lost') {
+	          ctx.fillText('YOU LOSE!', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 - 90, 400);
+	        } else {
+	          ctx.fillText('Circle of Life', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 - 90, 400);
+	          ctx.font = '16px Arial';
+	          ctx.fillText('Consume (run into) smaller circles,', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 - 65, 400);
+	          ctx.fillText('don\'t be consumed by larger ones.', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 - 45, 400);
+	        }
+	        ctx.font = '16px Arial';
+	        ctx.fillText('Use arrow keys or aswd to move', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 + 80, 400);
+	        ctx.fillText('Press space to begin!', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 + 110, 400);
+	      }
 	    }
 	  }, {
 	    key: 'addCircles',
 	    value: function addCircles() {
 	      for (var i = 0; i < 65; i++) {
 	        var r = Math.floor(Math.random() * 5) + 5;
-	        var x = Math.floor(Math.random() * (this.width - 2 * r)) + r;
-	        var y = Math.floor(Math.random() * (this.height - 2 * r)) + r;
+	        var x = this.randomCoords(r, this.width);
+	        var y = this.randomCoords(r, this.height);
 	        var circle = new _circle2.default(x, y, r);
 	        this.circles.push(circle);
 	      }
+	    }
+	  }, {
+	    key: 'randomCoords',
+	    value: function randomCoords(r, dim) {
+	      var coord = Math.floor(Math.random() * (dim - 2 * r)) + r;
+	      while (coord < dim / 2 + 100 && coord > dim / 2 - 100) {
+	        coord = Math.floor(Math.random() * (dim - 2 * r)) + r;
+	      }
+	      return coord;
 	    }
 	  }, {
 	    key: 'bindKeyHandlers',
@@ -200,12 +268,20 @@
 	      var _this2 = this;
 	
 	      window.addEventListener('keydown', function (e) {
-	        var dir = (0, _utils.getDir)(e);
-	        if (dir[0]) {
-	          _this2.pressed.x = dir[0];
+	        if (e.keyCode === 32) {
+	          if (_this2.started) {
+	            _this2.paused = !_this2.paused;
+	          }
+	          _this2.started = true;
 	        }
-	        if (dir[1]) {
-	          _this2.pressed.y = dir[1];
+	        if (_this2.started) {
+	          var dir = (0, _utils.getDir)(e);
+	          if (dir[0]) {
+	            _this2.pressed.x = dir[0];
+	          }
+	          if (dir[1]) {
+	            _this2.pressed.y = dir[1];
+	          }
 	        }
 	      });
 	      window.addEventListener('keyup', function (e) {
@@ -261,7 +337,7 @@
 	
 	  _createClass(Circle, [{
 	    key: 'update',
-	    value: function update(dt) {
+	    value: function update(dt, _, started) {
 	      if (this.shrinking) {
 	        this.r -= 1;
 	      } else if (this.growAmount) {
@@ -288,6 +364,12 @@
 	      }
 	      if (nextY > _utils.DIMS[1] - this.r || nextY < this.r) {
 	        this.momentum[1] *= -1;
+	      }
+	      if (!started) {
+	        if (nextX < _utils.DIMS[0] / 2 + 100 && nextX > _utils.DIMS[0] / 2 - 100 && nextY < _utils.DIMS[1] / 2 + 100 && nextY > _utils.DIMS[1] / 2 - 100) {
+	          this.momentum[0] *= -1;
+	          this.momentum[1] *= -1;
+	        }
 	      }
 	      this.x += this.momentum[0] * dt / this.r;
 	      this.y += this.momentum[1] * dt / this.r;
@@ -377,20 +459,24 @@
 	  return dir;
 	};
 	
-	var checkCollision = exports.checkCollision = function checkCollision(c1, c2) {
+	var checkCollision = exports.checkCollision = function checkCollision(c1, c2, cb) {
 	  var xDiff = c1.x - c2.x;
 	  var yDiff = c1.y - c2.y;
 	  var dist = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 	  if (dist <= c1.r + c2.r) {
 	    if (c1.r + c1.growAmount >= c2.r + c2.growAmount && !c2.shrinking) {
 	      if (c2.name === 'Player') {
-	        console.log('Player!');
+	        cb(true);
+	      } else {
+	        cb(false);
 	      }
 	      c2.shrink();
 	      c1.grow(c2.r);
 	    } else if (c2.r + c2.growAmount > c1.r + c1.growAmount && !c1.shrinking) {
 	      if (c1.name === 'Player') {
-	        console.log('Player!');
+	        cb(true);
+	      } else {
+	        cb(false);
 	      }
 	      c1.shrink();
 	      c2.grow(c1.r);
@@ -459,7 +545,7 @@
 	
 	  _createClass(Player, [{
 	    key: 'update',
-	    value: function update(dt, dir) {
+	    value: function update(dt, dir, started) {
 	      this.momentum[0] += dir.x;
 	      this.momentum[1] += dir.y;
 	      if (this.momentum[0] > 10 + this.r / 2) {
@@ -474,7 +560,7 @@
 	      if (this.momentum[1] < -10 - this.r / 2) {
 	        this.momentum[1] = -10 - this.r / 2;
 	      }
-	      _circle2.default.prototype.update.call(this, dt);
+	      _circle2.default.prototype.update.call(this, dt, dir, started);
 	    }
 	  }]);
 	
