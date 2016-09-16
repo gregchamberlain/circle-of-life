@@ -147,6 +147,7 @@
 	
 	    this.width = width;
 	    this.height = height;
+	    this.difficulty = 'easy';
 	    this.pressed = { x: 0, y: 0 };
 	    this.circles = [new _player2.default()];
 	    this.status = 'starting';
@@ -238,6 +239,8 @@
 	          ctx.fillText('don\'t be consumed by larger ones.', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 - 45, 400);
 	        }
 	        ctx.font = '16px Arial';
+	        ctx.fillText('Select Difficulty, current: ' + this.difficulty, _utils.DIMS[0] / 2, _utils.DIMS[1] / 2);
+	        ctx.fillText('J = easy  K = medium  L = hard', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 + 40);
 	        ctx.fillText('Use arrow keys or aswd to move', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 + 80, 400);
 	        ctx.fillText('Press space to begin!', _utils.DIMS[0] / 2, _utils.DIMS[1] / 2 + 110, 400);
 	      }
@@ -245,8 +248,26 @@
 	  }, {
 	    key: 'addCircles',
 	    value: function addCircles() {
-	      for (var i = 0; i < 65; i++) {
-	        var r = Math.floor(Math.random() * 5) + 5;
+	      var rLimit = void 0;
+	      var num = void 0;
+	      switch (this.difficulty) {
+	        case 'easy':
+	          rLimit = 5;
+	          num = 45;
+	          break;
+	        case 'medium':
+	          rLimit = 10;
+	          num = 55;
+	          break;
+	        case 'hard':
+	          rLimit = 20;
+	          num = 65;
+	          break;
+	        default:
+	
+	      }
+	      for (var i = 0; i < num; i++) {
+	        var r = Math.floor(Math.random() * rLimit) + 5;
 	        var x = this.randomCoords(r, this.width);
 	        var y = this.randomCoords(r, this.height);
 	        var circle = new _circle2.default(x, y, r);
@@ -263,11 +284,31 @@
 	      return coord;
 	    }
 	  }, {
+	    key: 'setDifficulty',
+	    value: function setDifficulty(d) {
+	      this.difficulty = d;
+	      this.reset();
+	    }
+	  }, {
 	    key: 'bindKeyHandlers',
 	    value: function bindKeyHandlers() {
 	      var _this2 = this;
 	
 	      window.addEventListener('keydown', function (e) {
+	        switch (e.keyCode) {
+	          case 74:
+	            _this2.setDifficulty('easy');
+	            break;
+	          case 75:
+	            _this2.setDifficulty('medium');
+	            break;
+	          case 76:
+	            _this2.setDifficulty('hard');
+	            break;
+	
+	          default:
+	
+	        }
 	        if (e.keyCode === 32) {
 	          if (_this2.started) {
 	            _this2.paused = !_this2.paused;
