@@ -1,4 +1,5 @@
 # Circle Of Life
+[Live Link](https://gregchamberlain.github.io/circle-of-life)
 
 ## Background
 Circle Of Life is a game very similar to agar.io. In this game a board is generated with many circles of random sizes. The goal of the user is to run into the circles smaller than they currently are and when contact is made they will consume that circle and grow in size. If the player makes contact with a circle larger than itself they lose and the game is over. In addition the user must shoot out some of its mass in order to change direction. The end goal of the game is to consume all the circles on the board and be the last left on the board.
